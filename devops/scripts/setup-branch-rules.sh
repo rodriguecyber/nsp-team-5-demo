@@ -41,7 +41,7 @@ fi
 
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "Error: GITHUB_TOKEN is not set."
-  echo "Create a token at: https://github.com/settings/tokens (scope: repo)"
+  echo "Create a token at: https://github.com/settings/tokens (scope: repo)"  
   exit 1
 fi
 
