@@ -57,43 +57,48 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-  codeqwality:
-    name: codeQL analysis
+  codeql:
+    name: CodeQL analysis
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
     steps:
-      - name checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Run codeQL analysis
-        uses: github/codeql-action/analyze@v2
-        with: 
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
           languages: java, javascript
-      - name: Auto build
-        uses: actions/codeql-actions/autobuild@v3
-      - name: Run codeQL analysis
-        uses: github/codeql-action/analyze@v2
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
   gitleaks:
-    name: gitleaks analysis
+    name: Gitleaks (secret detection)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v4
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-  trivy: 
-    name: Vulnerability Scan
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  trivy:
+    name: Trivy (filesystem scan)
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@v2
+        uses: aquasecurity/trivy-action@master
         with:
-          scan-type: fs
-          scan-target: ./
-          scan-options: --exit-code 1
-      - name: Run Trivy image scan
-        uses: aquasecurity/trivy-action@v2
-        with:
-          scan-type: image
-          scan-target: ./
-          scan-options: --exit-code 1
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
@@ -126,6 +131,3 @@ jobs:
         run: |
           docker tag communityboard-backend $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      
-
