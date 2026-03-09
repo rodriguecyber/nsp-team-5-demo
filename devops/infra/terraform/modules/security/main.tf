@@ -1,7 +1,7 @@
 # ALB: allow HTTP/HTTPS from internet
 resource "aws_security_group" "alb_sg" {
-  vpc_id = var.vpc_id
-  name   = "${var.project_name}-alb-sg"
+  vpc_id      = var.vpc_id
+  name        = "${var.project_name}-alb-sg"
   description = "ALB: allow 80/443 from internet"
 
   ingress {
@@ -29,8 +29,8 @@ resource "aws_security_group" "alb_sg" {
 
 # Backend: allow 8080 only from ALB
 resource "aws_security_group" "backend_sg" {
-  vpc_id = var.vpc_id
-  name   = "${var.project_name}-backend-sg"
+  vpc_id      = var.vpc_id
+  name        = "${var.project_name}-backend-sg"
   description = "Backend ECS: allow 8080 from ALB"
 
   ingress {
@@ -51,8 +51,8 @@ resource "aws_security_group" "backend_sg" {
 
 # RDS: allow 5432 only from backend
 resource "aws_security_group" "rds_sg" {
-  vpc_id = var.vpc_id
-  name   = "${var.project_name}-rds-sg"
+  vpc_id      = var.vpc_id
+  name        = "${var.project_name}-rds-sg"
   description = "RDS: allow 5432 from backend"
 
   ingress {
