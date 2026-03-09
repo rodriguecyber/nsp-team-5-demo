@@ -17,45 +17,45 @@ module "security" {
 
 # --- Application Load Balancer (public) ---
 module "alb" {
-  source             = "./modules/alb"
-  vpc_id             = module.network.vpc_id
-  public_subnet_ids  = module.network.public_subnet_ids
-  alb_sg_id          = module.security.alb_sg_id
-  project_name       = var.project_name
+  source            = "./modules/alb"
+  vpc_id            = module.network.vpc_id
+  public_subnet_ids = module.network.public_subnet_ids
+  alb_sg_id         = module.security.alb_sg_id
+  project_name      = var.project_name
 }
 
 # --- RDS (private) ---
 module "rds" {
-  source               = "./modules/rds"
-  project_name         = var.project_name
-  db_username          = var.db_username
-  db_password          = var.db_password
-  db_name              = var.db_name
-  private_subnet_ids   = module.network.private_subnet_ids
-  rds_sg_id            = module.security.rds_sg_id
+  source             = "./modules/rds"
+  project_name       = var.project_name
+  db_username        = var.db_username
+  db_password        = var.db_password
+  db_name            = var.db_name
+  private_subnet_ids = module.network.private_subnet_ids
+  rds_sg_id          = module.security.rds_sg_id
 }
 
 module "ecr" {
-  source         = "./modules/ecr"
-  project_name   = var.project_name
+  source          = "./modules/ecr"
+  project_name    = var.project_name
   repository_name = var.ecr_repository_name
 }
 
 # --- ECS backend (private, behind ALB) ---
 module "ecs" {
-  source               = "./modules/ecs"
-  project_name         = var.project_name
-  vpc_id               = module.network.vpc_id
-  private_subnet_ids   = module.network.private_subnet_ids
-  backend_sg_id        = module.security.backend_sg_id
-  target_group_arn     = module.alb.backend_target_group_arn
-  backend_image        = var.backend_image != null ? var.backend_image : "${module.ecr.repository_url}:${var.backend_image_tag}"
-  db_host              = module.rds.db_endpoint_address
-  db_port              = module.rds.db_endpoint_port
-  db_name              = var.db_name
-  db_username          = var.db_username
-  db_password          = var.db_password
-  jwt_secret           = var.jwt_secret
+  source             = "./modules/ecs"
+  project_name       = var.project_name
+  vpc_id             = module.network.vpc_id
+  private_subnet_ids = module.network.private_subnet_ids
+  backend_sg_id      = module.security.backend_sg_id
+  target_group_arn   = module.alb.backend_target_group_arn
+  backend_image      = var.backend_image != null ? var.backend_image : "${module.ecr.repository_url}:${var.backend_image_tag}"
+  db_host            = module.rds.db_endpoint_address
+  db_port            = module.rds.db_endpoint_port
+  db_name            = var.db_name
+  db_username        = var.db_username
+  db_password        = var.db_password
+  jwt_secret         = var.jwt_secret
 }
 
 
