@@ -16,4 +16,5 @@ __pycache__/
 devops/infra/terraform/backend/
 .terraform/
 .terraform.lock.hcl
+*.tfvars
 

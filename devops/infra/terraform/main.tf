@@ -35,7 +35,11 @@ module "rds" {
   rds_sg_id            = module.security.rds_sg_id
 }
 
-
+module "ecr" {
+  source         = "./modules/ecr"
+  project_name   = var.project_name
+  repository_name = var.ecr_repository_name
+}
 
 # --- ECS backend (private, behind ALB) ---
 module "ecs" {
@@ -45,7 +49,7 @@ module "ecs" {
   private_subnet_ids   = module.network.private_subnet_ids
   backend_sg_id        = module.security.backend_sg_id
   target_group_arn     = module.alb.backend_target_group_arn
-  backend_image        = var.backend_image
+  backend_image        = var.backend_image != null ? var.backend_image : "${module.ecr.repository_url}:${var.backend_image_tag}"
   db_host              = module.rds.db_endpoint_address
   db_port              = module.rds.db_endpoint_port
   db_name              = var.db_name
@@ -54,11 +58,12 @@ module "ecs" {
   jwt_secret           = var.jwt_secret
 }
 
+
 # --- Amplify frontend ---
 module "amplify" {
   source       = "./modules/amplify"
   project_name = var.project_name
   repo_url     = var.repo_url
-  api_url      = var.api_url
+  api_url      = "http://${module.alb.alb_dns_name}"
   github_token = var.github_token
 }
