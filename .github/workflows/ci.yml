@@ -49,12 +49,10 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
 
-
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v4
 
       - name: Setup Node
@@ -71,7 +69,6 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
-
 
   sonar:
     name: SonarCloud Scan
@@ -115,7 +112,6 @@ jobs:
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
 
-
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
@@ -123,56 +119,69 @@ jobs:
       security-events: write
       actions: read
       contents: read
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: java, javascript
-
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
-
       - name: Analyze
         uses: github/codeql-action/analyze@v3
-
 
   gitleaks:
     name: Secret Scan (Gitleaks)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TF_VAR_GITHUB_TOKEN }}
 
-
-  trivy:
-    name: Trivy Filesystem Scan
+  create-ecr:
+    name: Create ECR (Terraform)
     runs-on: ubuntu-latest
-
+    needs: [backend, frontend, sonar, codeql, gitleaks]
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@0.20.0
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          scan-type: fs
-          scan-ref: .
-          exit-code: 1
+          terraform_version: 1.5.0
+          terraform_wrapper: false
 
+      - name: Terraform Init & Apply (ECR)
+        working-directory: devops/infra/ecr
+        run: |
+          terraform init -input=false
+          terraform apply -input=false -auto-approve
+        env:
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_repository_name: communityboard-backend
+          TF_VAR_tags: '{"Environment":"dev","Project":"communityboard"}'
+
+      - name: Get ECR Repository URL
+        id: ecr
+        working-directory: devops/infra/ecr
+        run: |
+          REPO_URL=$(terraform output -raw repository_url)
+          echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin $REPO_URL
 
   docker-build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: [backend, frontend, sonar, codeql, gitleaks, trivy]
+    needs: [backend, frontend, sonar, codeql, gitleaks, create-ecr]
     if: github.ref == 'refs/heads/main'
 
     permissions:
@@ -188,21 +197,12 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
       - name: Build Docker Image
         run: docker build -t communityboard-backend ./backend
 
-      - name: Push Image to ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: communityboard-backend
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Tag & Push Docker Image
         run: |
-          docker tag communityboard-backend $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          docker tag communityboard-backend $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag communityboard-backend $REPO_URL:${GITHUB_SHA}
+          docker push $REPO_URL:${GITHUB_SHA}
+          docker tag communityboard-backend $REPO_URL:latest
+          docker push $REPO_URL:latest
