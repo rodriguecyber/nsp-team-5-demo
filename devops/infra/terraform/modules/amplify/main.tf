@@ -11,17 +11,18 @@ resource "aws_amplify_app" "frontend" {
       phases:
         preBuild:
           commands:
+            - cd frontend
             - npm ci
         build:
           commands:
             - npm run build
       artifacts:
-        baseDirectory: build
+        baseDirectory: frontend/build
         files:
           - '**/*'
       cache:
         paths:
-          - node_modules/**/*
+          - frontend/node_modules/**/*
   EOT
 
   custom_rule {
