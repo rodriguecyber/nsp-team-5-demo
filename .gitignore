@@ -15,6 +15,6 @@ __pycache__/
 # Terraform remote-state bootstrap (bucket + DynamoDB); keep local and uncommitted
 devops/infra/terraform/backend/
 .terraform/
-.terraform.lock.hcl
+.terraform.lock.hcl  
 *.tfvars   
 
