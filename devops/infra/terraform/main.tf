@@ -35,12 +35,7 @@ module "rds" {
   rds_sg_id            = module.security.rds_sg_id
 }
 
-# --- ECR (backend image repo; create first so CI can push) ---
-module "ecr" {
-  source         = "./modules/ecr"
-  project_name   = var.project_name
-  repository_name = var.ecr_repository_name
-}
+
 
 # --- ECS backend (private, behind ALB) ---
 module "ecs" {
@@ -50,7 +45,7 @@ module "ecs" {
   private_subnet_ids   = module.network.private_subnet_ids
   backend_sg_id        = module.security.backend_sg_id
   target_group_arn     = module.alb.backend_target_group_arn
-  backend_image        = coalesce(var.backend_image, "${module.ecr.repository_url}:${var.backend_image_tag}")
+  backend_image        = var.backend_image
   db_host              = module.rds.db_endpoint_address
   db_port              = module.rds.db_endpoint_port
   db_name              = var.db_name
