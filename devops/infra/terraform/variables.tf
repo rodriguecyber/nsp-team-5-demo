@@ -77,10 +77,7 @@ variable "repo_url" {
   description = "GitHub repo URL for Amplify (e.g. https://github.com/org/repo)"
 }
 
-variable "api_url" {
-  type        = string
-  description = "Backend API URL for frontend (e.g. https://alb-dns-name or custom domain)"
-}
+
 
 variable "github_token" {
   type        = string

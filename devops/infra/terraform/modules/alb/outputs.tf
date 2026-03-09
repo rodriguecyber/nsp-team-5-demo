@@ -10,3 +10,4 @@ output "alb_zone_id" {
 output "backend_target_group_arn" {
   value = aws_lb_target_group.backend.arn
 }
+
