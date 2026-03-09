@@ -17,8 +17,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_DB: communityboard
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -45,9 +45,9 @@ jobs:
         working-directory: ./backend
         run: mvn test
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/communityboard
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
+          SPRING_DATASOURCE_URL:  ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
   frontend:
     name: Frontend Build
@@ -80,8 +80,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_DB: communityboard
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER:  ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD:  ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -108,9 +108,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/communityboard
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
+          SPRING_DATASOURCE_URL:  ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
   codeql:
     name: CodeQL Analysis
