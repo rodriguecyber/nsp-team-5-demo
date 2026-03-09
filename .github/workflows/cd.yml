@@ -1,5 +1,4 @@
 # # CD: Terraform plan/apply for devops/infra/terraform
-# # Any failed step fails the workflow (no continue-on-error).
 # name: CD (Terraform)
 
 # on:
