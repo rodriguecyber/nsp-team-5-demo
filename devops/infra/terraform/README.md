@@ -13,7 +13,7 @@ Infrastructure: VPC, ALB, **ECR**, ECS (backend), RDS (Postgres), Amplify (front
 ```bash
 cd devops/infra/terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit: set db_username, db_password, repo_url, api_url (and jwt_secret, github_token if needed)
+# Edit: set db_username, db_password, repo_url, api_url (and jwt_secret, github_token if needed)  
 terraform init
 terraform plan
 terraform apply
